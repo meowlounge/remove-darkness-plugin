@@ -1,0 +1,8 @@
+name: remove-darkness
+version: '0.0.1'
+main: dev.prodbyeagle.removeDarknessPlugin.RemoveDarknessPlugin
+api-version: '1.21.10'
+commands:
+  darkness:
+    description: Toggle whether darkness effects are removed for you.
+    usage: /<command> [on|off|toggle|status]
