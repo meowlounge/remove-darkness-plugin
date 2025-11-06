@@ -6,14 +6,38 @@ import org.bukkit.command.CommandSender
 import org.bukkit.command.TabExecutor
 import org.bukkit.entity.Player
 
+/**
+ * Handles the `/darkness` command so players can manage their Darkness preference.
+ */
 class DarknessCommand(
-    private val preferences: PlayerPreferenceStore,
-    private val darknessManager: DarknessManager
+    private val darknessService: DarknessService
 ) : TabExecutor {
 
-    private val enableKeywords = setOf("on", "enable", "true", "allow")
-    private val disableKeywords = setOf("off", "disable", "false", "deny")
+    /**
+     * Supported subcommands together with their recognised string aliases.
+     */
+    private enum class SubCommand(val primaryAlias: String, vararg aliases: String) {
+        STATUS("status", "info"),
+        ALLOW("allow", "enable", "on", "true"),
+        DENY("deny", "disable", "off", "false"),
+        TOGGLE("toggle");
 
+        val allAliases: Set<String> = setOf(primaryAlias, *aliases)
+
+        companion object {
+            private val lookup = entries.flatMap { command ->
+                command.allAliases.map { alias -> alias to command }
+            }.toMap()
+
+            val tabOptions: List<String> = entries.map(SubCommand::primaryAlias)
+
+            fun from(token: String): SubCommand? = lookup[token]
+        }
+    }
+
+    /**
+     * Executes the command, toggling or reporting the caller's current Darkness setting.
+     */
     override fun onCommand(
         sender: CommandSender,
         command: Command,
@@ -27,17 +51,16 @@ class DarknessCommand(
         }
 
         if (args.isEmpty()) {
-            val newPreference = preferences.toggle(player)
+            val newPreference = darknessService.toggle(player)
             notifyPreference(player, newPreference, changed = true)
-            darknessManager.enforcePreference(player)
             return true
         }
 
         val keyword = args[0].lowercase(Locale.ROOT)
-        return when (keyword) {
-            "status" -> {
+        return when (SubCommand.from(keyword)) {
+            SubCommand.STATUS -> {
                 player.sendMessage(
-                    if (preferences.allowsDarkness(player)) {
+                    if (darknessService.allowsDarkness(player)) {
                         "Darkness effects are currently enabled for you."
                     } else {
                         "Darkness effects are currently blocked for you."
@@ -45,30 +68,31 @@ class DarknessCommand(
                 )
                 true
             }
-            in enableKeywords -> {
-                val changed = preferences.setAllowsDarkness(player, true)
+            SubCommand.ALLOW -> {
+                val changed = darknessService.setAllowsDarkness(player, allow = true)
                 notifyPreference(player, allow = true, changed = changed)
                 true
             }
-            in disableKeywords -> {
-                val changed = preferences.setAllowsDarkness(player, false)
+            SubCommand.DENY -> {
+                val changed = darknessService.setAllowsDarkness(player, allow = false)
                 notifyPreference(player, allow = false, changed = changed)
-                darknessManager.enforcePreference(player)
                 true
             }
-            "toggle" -> {
-                val newPreference = preferences.toggle(player)
+            SubCommand.TOGGLE -> {
+                val newPreference = darknessService.toggle(player)
                 notifyPreference(player, newPreference, changed = true)
-                darknessManager.enforcePreference(player)
                 true
             }
-            else -> {
-                player.sendMessage("Usage: /$label [on|off|toggle|status]")
+            null -> {
+                player.sendMessage("Usage: /$label [allow|deny|toggle|status]")
                 true
             }
         }
     }
 
+    /**
+     * Suggests valid subcommands for the first argument.
+     */
     override fun onTabComplete(
         sender: CommandSender,
         command: Command,
@@ -79,11 +103,15 @@ class DarknessCommand(
             return mutableListOf()
         }
 
-        val options = sequenceOf("on", "off", "toggle", "status")
         val current = args.firstOrNull()?.lowercase(Locale.ROOT).orEmpty()
-        return options.filter { it.startsWith(current) }.toMutableList()
+        return SubCommand.tabOptions
+            .filter { it.startsWith(current) }
+            .toMutableList()
     }
 
+    /**
+     * Sends feedback to [player] explaining whether Darkness is now enabled or disabled.
+     */
     private fun notifyPreference(player: Player, allow: Boolean, changed: Boolean) {
         val message = if (allow) {
             if (changed) {

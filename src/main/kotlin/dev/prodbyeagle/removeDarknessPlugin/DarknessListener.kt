@@ -9,11 +9,16 @@ import org.bukkit.event.entity.EntityPotionEffectEvent.Action
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.potion.PotionEffectType
 
+/**
+ * Bukkit listener that suppresses Darkness potion effects for players who have not opted in.
+ */
 class DarknessListener(
-    private val preferences: PlayerPreferenceStore,
-    private val darknessManager: DarknessManager
+    private val darknessService: DarknessService
 ) : Listener {
 
+    /**
+     * Cancels Darkness potion applications for players who prefer to keep the effect disabled.
+     */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     fun handlePotionEffect(event: EntityPotionEffectEvent) {
         val player = event.entity as? Player ?: return
@@ -22,7 +27,7 @@ class DarknessListener(
             return
         }
 
-        if (preferences.allowsDarkness(player)) {
+        if (darknessService.allowsDarkness(player)) {
             return
         }
 
@@ -31,11 +36,14 @@ class DarknessListener(
             else -> {}
         }
 
-        darknessManager.removeDarknessNextTick(player)
+        darknessService.applyPreference(player)
     }
 
+    /**
+     * Re-applies a joining player's stored preference to ensure Darkness stays disabled if needed.
+     */
     @EventHandler(priority = EventPriority.MONITOR)
     fun handlePlayerJoin(event: PlayerJoinEvent) {
-        darknessManager.enforcePreference(event.player)
+        darknessService.applyPreference(event.player)
     }
 }

@@ -4,32 +4,26 @@ import org.bukkit.plugin.java.JavaPlugin
 
 class RemoveDarknessPlugin : JavaPlugin() {
 
-    private lateinit var preferenceStore: PlayerPreferenceStore
-    private lateinit var darknessManager: DarknessManager
+    private lateinit var darknessService: DarknessService
 
+    /**
+     * Constructs the service, registers listeners and commands, and enforces preferences for
+     * players already online when the plugin loads.
+     */
     override fun onEnable() {
-        reloadConfig()
-
-        preferenceStore = PlayerPreferenceStore(this).apply { reload() }
-        darknessManager = DarknessManager(this, preferenceStore)
+        darknessService = DarknessService(this)
 
         server.pluginManager.registerEvents(
-            DarknessListener(preferenceStore, darknessManager),
+            DarknessListener(darknessService),
             this
         )
 
-        val command = DarknessCommand(preferenceStore, darknessManager)
+        val command = DarknessCommand(darknessService)
         getCommand("darkness")?.apply {
             setExecutor(command)
             tabCompleter = command
         } ?: logger.severe("Command 'darkness' is missing from plugin.yml.")
 
-        server.onlinePlayers.forEach(darknessManager::enforcePreference)
-    }
-
-    override fun onDisable() {
-        if (::preferenceStore.isInitialized) {
-            preferenceStore.save()
-        }
+        server.onlinePlayers.forEach(darknessService::applyPreference)
     }
 }
