@@ -1,57 +1,49 @@
-# Remove Darkness Plugin
+# Remove-Darkness Plugin
 
-A lightweight Paper plugin that prevents the Darkness status effect from affecting players unless they explicitly opt in. Ideal for servers that want to remove the blindness caused by Wardens or sculk shriekers while still letting players choose the vanilla experience.
+A lightweight **Paper plugin** that disables Minecraft’s *darkness visual effect* for players who choose to opt out — perfect for **multiplayer servers**.
 
-## Features
-- Cancels and removes the Darkness potion effect for opted-out players automatically.
-- Lets each player toggle the effect for themselves with a single command.
-- Remembers player preferences across restarts via the player persistent data container; no config edits needed.
+---
 
-## Requirements
-- Paper 1.21.10 (or a compatible fork) — built against the Paper API.
-- Java 21 for both the server runtime and building the plugin.
+## ⚠️ Usage Notice
 
-## Installation
-1. Download or build the plugin jar (see Development).
-2. Place the jar in your server's `plugins` directory.
-3. Restart or reload the server; the plugin manages its configuration automatically.
+This plugin is designed **for servers only**.
+If you want the same feature in **singleplayer**, use the **[Fabric Mod](https://modrinth.com/mod/rde)** instead.
 
-## Usage
-- By default, Darkness is blocked for everyone. Players who prefer the effect can opt in.
-- The plugin re-evaluates preferences whenever a player joins or a Darkness effect is applied.
+Installing both the mod and the plugin is unnecessary.
+Each version is made for its own environment — **client mod for singleplayer, plugin for servers**.
 
-### Commands
-- `/darkness` - toggle Darkness on or off for yourself.
-- `/darkness allow` / `/darkness on` - explicitly allow Darkness.
-- `/darkness deny` / `/darkness off` - keep Darkness removed.
-- `/darkness toggle` - synonym for running the command without arguments.
-- `/darkness status` - show your current preference.
+---
 
-The command is only available to players; no permissions are required.
+## 🧩 Overview
 
-## How It Works
-The plugin stores a per-player “opt-in” flag inside the Paper persistent data container (`PersistentDataContainer`) using the key `remove-darkness:darkness_opt_in`. When a player has not opted in, the listener cancels Darkness potion applications and the service schedules a task for the next tick to strip any residual effect.
+**Remove-Darkness Plugin** removes the “darkness” screen overlay that appears in low-light areas or when affected by the *Darkness* potion or Warden ability.
+It does **not** alter lighting, gameplay mechanics, or other players’ experiences — only the **visual overlay** for the player who opts out.
 
-## Configuration
-There is no configuration file to manage. Player choices live in their own persistent data container entry and travel with the player data.
+---
 
-## Development
-The project uses Gradle with the Kotlin DSL and the Shadow plugin to produce a shaded jar.
+## ⚙️ Features
 
-```sh
-# On Linux/macOS
-./gradlew build
+* Fully compatible with **Paper 1.21.10+**
+* Players can toggle the effect **allow / deny / status** via `/darkness` command
+* Saves each player’s preference automatically
+* No config editing or permissions required
+* Coexists cleanly with other plugins and effects
 
-# On Windows PowerShell
-.\gradlew.bat build
-```
+---
 
-The shaded artifact is written to `build/libs/remove-darkness-plugin-<version>-all.jar`.
+## 💬 Commands
 
-To spin up a local test server with the plugin already on the classpath, run:
+| Command            | Description                               |
+| ------------------ | ----------------------------------------- |
+| `/darkness`        | Toggles your personal Darkness protection |
+| `/darkness allow`     | Enables Darkness (allow visual effect)    |
+| `/darkness deny`    | Disables Darkness (block visual effect)   |
+| `/darkness status` | Shows your current Darkness setting       |
 
-```sh
-./gradlew runServer
-```
+> Commands are **player-only** — no admin setup or permissions needed.
 
-This downloads the matching Paper version (1.21.10) and launches it with the plugin included.
+---
+
+## 🧰 License
+
+Licensed under the [MIT License](https://github.com/meowlounge/remove-darkness/blob/master/LICENSE).
