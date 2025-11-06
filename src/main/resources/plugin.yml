@@ -1,5 +1,5 @@
 name: remove-darkness
-version: '0.1.2'
+version: '${version}'
 author: "prodbyeagle"
 prefix: "EAGLE: RD"
 main: dev.prodbyeagle.removeDarknessPlugin.RemoveDarknessPlugin
